@@ -72,12 +72,12 @@ If already installed check if new version is available.
 
 Execute unit tests
 ```
-    cd "FileTypeDetection/test/FileTypeDetection.Tests"
+    cd "Analyse/test/Analyse.Tests"
     dotnet test
 ```
 
 Deploy application
 ```
-    cd "FileTypeDetection/src/FileTypeDetection"
+    cd "Analyse/src/Analyse"
     dotnet lambda deploy-serverless
 ```
