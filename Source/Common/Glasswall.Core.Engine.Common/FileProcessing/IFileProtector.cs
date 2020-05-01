@@ -4,11 +4,11 @@ namespace Glasswall.Core.Engine.Common.FileProcessing
 {
     public interface IFileProtector
     {
-        //Task<byte[]> GetProtectedFileAsync(
+        //Task<byte[]> GetReportAsync(
         //    ContentManagementFlags contentManagementFlags,
         //    string fileType, 
         //    IByteReader byteReader,
         //    CancellationToken cancellationToken);
-        IFileProtectResponse GetProtectedFile(ContentManagementFlags contentManagementFlags, string fileType, byte[] fileBytes);
+        IFileProtectResponse GetReport(ContentManagementFlags contentManagementFlags, string fileType, byte[] fileBytes);
     }
 }

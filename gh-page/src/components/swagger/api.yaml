@@ -2339,7 +2339,7 @@
               description: Forbidden - This typically occurs when the x-api-key is not supplied, or it is incorrect.
             '415':
               description: Unsupported Media Type - This happens when the request was not sent in JSON.
-      /api/analyse/sas:
+      /api/analyse/url:
         post:
           summary: Requests that the input URL to a file is analysed.
           description: Analyses the input file found at the url and returns the Glasswall core engines XML report.
@@ -2355,9 +2355,9 @@
                 schema:
                   type: object
                   required:
-                    - SasUrl
+                    - InputGetUrl
                   properties:
-                    SasUrl:
+                    InputGetUrl:
                       type: string
                     ContentManagementFlags:
                       type: object
@@ -4662,7 +4662,7 @@
                   schema:
                     type: object
                     properties:
-                      SasUrl:
+                      InputGetUrl:
                         type: array
                         description: "Error relating to the input"
                         items:

@@ -1,5 +1,5 @@
 using System;
-using System.Diagnostics;
+using Glasswall.CloudSdk.Common;
 using Glasswall.CloudSdk.Common.Web.Abstraction;
 using Glasswall.CloudSdk.Common.Web.Models;
 using Glasswall.Core.Engine.Common.FileProcessing;
@@ -12,14 +12,18 @@ namespace Glasswall.CloudSdk.AWS.Analyse.Controllers
 {
     public class AnalyseController : CloudSdkController<AnalyseController>
     {
+        private readonly IGlasswallVersionService _glasswallVersionService;
         private readonly IFileTypeDetector _fileTypeDetector;
         private readonly IFileAnalyser _fileAnalyser;
 
         public AnalyseController(
+            IGlasswallVersionService glasswallVersionService,
             IFileTypeDetector fileTypeDetector,
             IFileAnalyser fileAnalyser,
-            ILogger<AnalyseController> logger) : base(logger)
+            IMetricService metricService,
+            ILogger<AnalyseController> logger) : base(logger, metricService)
         {
+            _glasswallVersionService = glasswallVersionService ?? throw new ArgumentNullException(nameof(glasswallVersionService));
             _fileTypeDetector = fileTypeDetector ?? throw new ArgumentNullException(nameof(fileTypeDetector));
             _fileAnalyser = fileAnalyser ?? throw new ArgumentNullException(nameof(fileAnalyser));
         }
@@ -29,14 +33,27 @@ namespace Glasswall.CloudSdk.AWS.Analyse.Controllers
         {
             try
             {
+                Logger.LogInformation("'{0}' method invoked", nameof(AnalyseFromBase64));
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                Logger.LogInformation("{0} method invoked", nameof(AnalyseFromBase64));
-                
-                return TryGetBase64File(request.Base64, out var bytes) 
-                    ? AnalyseFromBytes(request.FileName, bytes, request.ContentManagementFlags)
-                    : new BadRequestObjectResult("Could not parse base 64 file.");
+                if (!TryGetBase64File(request.Base64, out var file))
+                    return BadRequest("Input file could not be decoded from base64.");
+
+                RecordEngineVersion();
+
+                var fileType = DetectFromBytes(file);
+
+                if (fileType.FileType == FileType.Unknown)
+                    return UnprocessableEntity("File could not be determined to be a supported file");
+
+                var xmlReport = AnalyseFromBytes(request.ContentManagementFlags, fileType.FileTypeName, file);
+
+                if (string.IsNullOrWhiteSpace(xmlReport))
+                    return UnprocessableEntity("No report could be generated for file.");
+
+                return Ok(xmlReport);
             }
             catch (Exception e)
             {
@@ -45,21 +62,32 @@ namespace Glasswall.CloudSdk.AWS.Analyse.Controllers
             }
         }
 
-        [HttpPost("sas")]
-        public IActionResult AnalyseFromSas([FromBody] SasRequest request)
+        [HttpPost("url")]
+        public IActionResult AnalyseFromUrl([FromBody] UrlRequest request)
         {
             try
             {
+                Logger.LogInformation("'{0}' method invoked", nameof(AnalyseFromBase64));
+
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
-                
-                Logger.LogInformation("{0} method invoked", nameof(AnalyseFromSas));
 
-                var fileName = GetFileNameFromUrl(request.SasUrl.AbsolutePath);
+                if (!TryGetFile(request.InputGetUrl, out var file))
+                    return BadRequest("Input file could not be downloaded.");
 
-                return TryGetFile(request.SasUrl, out var bytes)
-                    ? AnalyseFromBytes(fileName, bytes, request.ContentManagementFlags)
-                    : new BadRequestObjectResult($"Could not download file from SAS: {request.SasUrl}.");
+                RecordEngineVersion();
+
+                var fileType = DetectFromBytes(file);
+
+                if (fileType.FileType == FileType.Unknown)
+                    return UnprocessableEntity("File could not be determined to be a supported file");
+
+                var xmlReport = AnalyseFromBytes(request.ContentManagementFlags, fileType.FileTypeName, file);
+
+                if (string.IsNullOrWhiteSpace(xmlReport))
+                    return UnprocessableEntity("No report could be generated for file.");
+
+                return Ok(xmlReport);
             }
             catch (Exception e)
             {
@@ -68,26 +96,33 @@ namespace Glasswall.CloudSdk.AWS.Analyse.Controllers
             }
         }
 
-        private IActionResult AnalyseFromBytes(string fileName, byte[] bytes, ContentManagementFlags contentManagementFlags)
+        private string AnalyseFromBytes(ContentManagementFlags contentManagementFlags, string fileType, byte[] bytes)
         {
             contentManagementFlags = contentManagementFlags.ValidatedOrDefault();
-            var fileType = _fileTypeDetector.DetermineFileType(bytes);
 
-            if (fileType.FileType == FileType.Unknown)
-            {
-                Logger.LogInformation("Unknown file type detected.");
-                return new UnprocessableEntityObjectResult("File could not be determined to be a supported file");
-            }
+            TimeMetricTracker.Restart();
+            var response = _fileAnalyser.GetReport(contentManagementFlags, fileType, bytes);
+            TimeMetricTracker.Stop();
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            var response = _fileAnalyser.GetReport(contentManagementFlags, fileType.FileTypeName, bytes);
-
-            stopwatch.Stop();
-            Logger.Log(LogLevel.Information, $"File '{fileName}' GetReport call took {stopwatch.Elapsed:c}");
-
-            return new OkObjectResult(response);
+            MetricService.Record(Metric.AnalyseTime, TimeMetricTracker.Elapsed);
+            return response;
         }
+        
+        private void RecordEngineVersion()
+        {
+            var version = _glasswallVersionService.GetVersion();
+            MetricService.Record(Metric.Version, version);
+        }
+
+        private FileTypeDetectionResponse DetectFromBytes(byte[] bytes)
+        {
+            TimeMetricTracker.Restart();
+            var fileTypeResponse = _fileTypeDetector.DetermineFileType(bytes);
+            TimeMetricTracker.Stop();
+
+            MetricService.Record(Metric.DetectFileTypeTime, TimeMetricTracker.Elapsed);
+            return fileTypeResponse;
+        }
+
     }
 }

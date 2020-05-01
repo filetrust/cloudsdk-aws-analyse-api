@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Glasswall.Core.Engine.Commo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Glasswall.Core.Engine.Messaging", "Source\Common\Glasswall.Core.Engine.Messaging\Glasswall.Core.Engine.Messaging.csproj", "{172BB834-E9A1-48B1-AF7E-003D84A8BFE5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Glasswall.CloudSdk.AWS.Analyse.Tests", "Source\Tests\Glasswall.CloudSdk.AWS.Analyse.Tests.csproj", "{AAF4F94C-CC2D-4A60-99E9-3490CEC0BB02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{172BB834-E9A1-48B1-AF7E-003D84A8BFE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{172BB834-E9A1-48B1-AF7E-003D84A8BFE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{172BB834-E9A1-48B1-AF7E-003D84A8BFE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAF4F94C-CC2D-4A60-99E9-3490CEC0BB02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAF4F94C-CC2D-4A60-99E9-3490CEC0BB02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAF4F94C-CC2D-4A60-99E9-3490CEC0BB02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAF4F94C-CC2D-4A60-99E9-3490CEC0BB02}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
