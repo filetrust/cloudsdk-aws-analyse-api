@@ -43,7 +43,7 @@ jobs:
       uses: appleboy/lambda-action@master
       with:
         zip_file: package/package.zip
-        function_name: analyse-stack-AspNetCoreFunction-GUNPXE7JMBVN
+        function_name: analyse-stack-AspNetCoreFunction-XVVON9OHLQUF
         aws_region: ${{ secrets.QA_REGION }}
         aws_access_key_id: ${{ secrets.QA_SECRET_ID }}
         aws_secret_access_key: ${{ secrets.QA_SECRET_KEY }}
