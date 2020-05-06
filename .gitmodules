@@ -1,0 +1,6 @@
+[submodule "lib/linux"]
+	path = lib/linux
+	url = https://github.com/filetrust/Glasswall-Rebuild-SDK-Linux
+[submodule "lib/windows"]
+	path = lib/windows
+	url = https://github.com/filetrust/Glasswall-Rebuild-SDK-Windows
